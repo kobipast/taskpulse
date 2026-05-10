@@ -122,6 +122,47 @@
       overflow-y: auto;
     }
 
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(210px, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+
+    .tasks-section {
+      width: min(calc(100vw - 32px), 1400px);
+      margin-left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .kanban-column {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 10px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kanban-column-header {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .kanban-list {
+      max-height: 50vh;
+    }
+
+    .kanban-empty {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
     .feed-item {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -460,12 +501,33 @@
       </article>
     </section>
 
-    <section class="card">
+    <section class="card tasks-section">
       <h2 class="feed-title">Tasks</h2>
       <p id="restStatus" class="rest-status rest-loading" hidden></p>
       <button type="button" id="retryLoadBtn" class="btn-retry" hidden>נסה שוב לטעון מ-GET /tasks</button>
       <p id="emptyState" class="empty-state">אין משימות (אחרי טעינה מוצלחת מהשרת).</p>
-      <ul id="taskList" class="feed-list" aria-live="polite"></ul>
+      <div id="kanbanBoard" class="kanban-board" aria-live="polite">
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Created</h3>
+          <p id="createdColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="createdColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">In Progress</h3>
+          <p id="inProgressColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="inProgressColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Completed</h3>
+          <p id="completedColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="completedColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Overdue</h3>
+          <p id="overdueColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="overdueColumnList" class="feed-list kanban-list"></ul>
+        </section>
+      </div>
     </section>
   </div>
 
@@ -562,7 +624,15 @@
     const overdueCountEl = document.getElementById("overdueCount");
     const lastUpdateTimeEl = document.getElementById("lastUpdateTime");
     const connectionStateEl = document.getElementById("connectionState");
-    const taskListEl = document.getElementById("taskList");
+    const kanbanBoardEl = document.getElementById("kanbanBoard");
+    const createdColumnListEl = document.getElementById("createdColumnList");
+    const inProgressColumnListEl = document.getElementById("inProgressColumnList");
+    const completedColumnListEl = document.getElementById("completedColumnList");
+    const overdueColumnListEl = document.getElementById("overdueColumnList");
+    const createdColumnEmptyEl = document.getElementById("createdColumnEmpty");
+    const inProgressColumnEmptyEl = document.getElementById("inProgressColumnEmpty");
+    const completedColumnEmptyEl = document.getElementById("completedColumnEmpty");
+    const overdueColumnEmptyEl = document.getElementById("overdueColumnEmpty");
     const emptyStateEl = document.getElementById("emptyState");
     const restStatusEl = document.getElementById("restStatus");
     const retryLoadBtn = document.getElementById("retryLoadBtn");
@@ -1043,17 +1113,53 @@
      * Clears and re-renders the full task list from `tasksById` (no duplicates).
      */
     function renderTaskList() {
-      taskListEl.replaceChildren();
+      createdColumnListEl.replaceChildren();
+      inProgressColumnListEl.replaceChildren();
+      completedColumnListEl.replaceChildren();
+      overdueColumnListEl.replaceChildren();
+
       const tasks = Array.from(tasksById.values());
-      tasks.sort((a, b) => {
-        const ta = new Date(a.createdAt || 0).getTime();
-        const tb = new Date(b.createdAt || 0).getTime();
-        return tb - ta;
-      });
+      const grouped = {
+        CREATED: [],
+        IN_PROGRESS: [],
+        COMPLETED: [],
+        OVERDUE: []
+      };
 
       for (const task of tasks) {
-        taskListEl.appendChild(createTaskCardElement(task));
+        const status = (task.status || "CREATED").toUpperCase();
+        if (grouped[status]) {
+          grouped[status].push(task);
+        } else {
+          grouped.CREATED.push(task);
+        }
       }
+
+      for (const statusKey of Object.keys(grouped)) {
+        grouped[statusKey].sort((a, b) => {
+          const ta = new Date(a.createdAt || 0).getTime();
+          const tb = new Date(b.createdAt || 0).getTime();
+          return tb - ta;
+        });
+      }
+
+      for (const task of grouped.CREATED) {
+        createdColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.IN_PROGRESS) {
+        inProgressColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.COMPLETED) {
+        completedColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.OVERDUE) {
+        overdueColumnListEl.appendChild(createTaskCardElement(task));
+      }
+
+      createdColumnEmptyEl.hidden = grouped.CREATED.length > 0;
+      inProgressColumnEmptyEl.hidden = grouped.IN_PROGRESS.length > 0;
+      completedColumnEmptyEl.hidden = grouped.COMPLETED.length > 0;
+      overdueColumnEmptyEl.hidden = grouped.OVERDUE.length > 0;
 
       const showEmpty = tasks.length === 0 && restLoadState === "ok";
       emptyStateEl.style.display = showEmpty ? "block" : "none";
@@ -1188,7 +1294,7 @@
       loadTasksFromRest({ replaceAll: true });
     });
 
-    taskListEl.addEventListener("click", function (event) {
+    kanbanBoardEl.addEventListener("click", function (event) {
       const taskCard = event.target.closest(".feed-item");
       if (!taskCard) return;
       const taskId = taskCard.dataset.taskId;
@@ -1197,7 +1303,7 @@
       }
     });
 
-    taskListEl.addEventListener("keydown", function (event) {
+    kanbanBoardEl.addEventListener("keydown", function (event) {
       if (event.key !== "Enter" && event.key !== " ") return;
       const taskCard = event.target.closest(".feed-item");
       if (!taskCard) return;
