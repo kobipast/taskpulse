@@ -1,6 +1,5 @@
 package com.taskpulse.tasks.messaging;
 
-import com.taskpulse.tasks.events.TaskCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

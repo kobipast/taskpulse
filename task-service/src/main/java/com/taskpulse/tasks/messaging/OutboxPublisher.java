@@ -1,8 +1,6 @@
 package com.taskpulse.tasks.messaging;
 
 import com.taskpulse.tasks.events.EventEnvelope;
-import com.taskpulse.tasks.events.TaskCreatedEvent;
-import com.taskpulse.tasks.events.TaskStatusChangedEvent;
 import com.taskpulse.tasks.persistence.entity.OutboxEvent;
 import com.taskpulse.tasks.persistence.entity.OutboxEventStatus;
 import com.taskpulse.tasks.persistence.repository.OutboxEventRepository;
