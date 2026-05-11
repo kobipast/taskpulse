@@ -15,7 +15,7 @@ public class TaskEventConsumer {
 
     @KafkaListener(
             topics = "task-events",
-            groupId = "taskpulse-notification-service"
+            groupId = "taskpulse-websocket-service"
     )
     public void consume(String eventJson) {
         log.info("Received task event: {}", eventJson);
