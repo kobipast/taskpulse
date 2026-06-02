@@ -1,24 +1,26 @@
 ﻿:root {
-  --bg: #f5f7fb;
-  --surface: #ffffff;
-  --text: #1d2433;
-  --muted: #667085;
-  --shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
-  --ok-bg: #e9f8ef;
-  --ok-text: #0f8a43;
-  --bad-bg: #fdecee;
-  --bad-text: #c23145;
-  --neutral-bg: #eceff5;
-  --neutral-text: #4d5a73;
-  --border: #e5e8ef;
-  --created-bg: #e8f2ff;
-  --created-text: #1d4ed8;
-  --progress-bg: #fff7e6;
-  --progress-text: #b46700;
-  --completed-bg: #e9f8ef;
-  --completed-text: #0f8a43;
-  --overdue-bg: #fdecee;
-  --overdue-text: #c23145;
+  --bg: #11141c;
+  --bg-elevated: #171b25;
+  --surface: #1c2230;
+  --surface-soft: #1a2030;
+  --text: #e7ebf3;
+  --muted: #98a2b7;
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  --ok-bg: rgba(40, 199, 111, 0.16);
+  --ok-text: #4ade80;
+  --bad-bg: rgba(248, 80, 110, 0.16);
+  --bad-text: #fb7185;
+  --neutral-bg: #2b3345;
+  --neutral-text: #b5c0d6;
+  --border: #2a3347;
+  --created-bg: rgba(73, 144, 255, 0.18);
+  --created-text: #7fb5ff;
+  --progress-bg: rgba(255, 181, 72, 0.18);
+  --progress-text: #ffc162;
+  --completed-bg: rgba(40, 199, 111, 0.18);
+  --completed-text: #52e48c;
+  --overdue-bg: rgba(248, 80, 110, 0.18);
+  --overdue-text: #ff8aa2;
 }
 
 * {
@@ -27,16 +29,16 @@
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.4;
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 1180px;
   margin: 32px auto;
-  padding: 0 16px 24px;
+  padding: 0 18px 24px;
 }
 
 .header {
@@ -44,20 +46,28 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1a2130 0%, #171d2a 100%);
+  box-shadow: var(--shadow);
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 0.3px;
+  font-size: 1.35rem;
+  letter-spacing: 0.2px;
+  font-weight: 700;
 }
 
 .status-badge {
-  padding: 6px 12px;
+  padding: 6px 11px;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
   background: var(--neutral-bg);
   color: var(--neutral-text);
 }
@@ -65,43 +75,49 @@ body {
 .status-connected {
   background: var(--ok-bg);
   color: var(--ok-text);
+  border-color: rgba(74, 222, 128, 0.35);
 }
 
 .status-disconnected {
   background: var(--bad-bg);
   color: var(--bad-text);
+  border-color: rgba(251, 113, 133, 0.35);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: var(--shadow);
-  padding: 14px;
+  padding: 12px;
 }
 
 .card-label {
-  font-size: 0.85rem;
+  font-size: 0.74rem;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
 }
 
 .card-value {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   word-break: break-word;
 }
 
 .feed-title {
-  margin: 0 0 10px;
-  font-size: 1.15rem;
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  letter-spacing: 0.2px;
 }
 
 .feed-list {
@@ -110,7 +126,7 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   max-height: 60vh;
   overflow-y: auto;
 }
@@ -118,7 +134,7 @@ body {
 .kanban-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(210px, 1fr));
-  gap: 12px;
+  gap: 10px;
   align-items: start;
 }
 
@@ -126,12 +142,13 @@ body {
   width: min(calc(100vw - 32px), 1400px);
   margin-left: 50%;
   transform: translateX(-50%);
+  background: linear-gradient(180deg, #1a2030 0%, #181f2d 100%);
 }
 
 .kanban-column {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #fbfcff;
+  border-radius: 12px;
+  background: var(--surface-soft);
   padding: 10px;
   min-height: 220px;
   display: flex;
@@ -141,9 +158,11 @@ body {
 
 .kanban-column-header {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .kanban-list {
@@ -152,22 +171,23 @@ body {
 
 .kanban-empty {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--muted);
 }
 
 .feed-item {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #fbfcff;
+  border-radius: 12px;
+  padding: 10px;
+  background: #1f2736;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 }
 
 .feed-item:hover {
-  box-shadow: 0 3px 12px rgba(16, 24, 40, 0.12);
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
+  border-color: #3f4f6d;
 }
 
 .feed-item:focus-visible {
@@ -178,6 +198,7 @@ body {
 .feed-item-title {
   margin: 0 0 6px;
   font-weight: 700;
+  color: #f2f5fb;
 }
 
 .feed-item-header {
@@ -191,7 +212,7 @@ body {
 
 .feed-item-meta {
   margin: 2px 0;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--muted);
   word-break: break-all;
 }
@@ -200,7 +221,7 @@ body {
   margin: 8px 0 0 18px;
   padding: 0;
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .feed-comments li {
@@ -209,47 +230,54 @@ body {
 }
 
 .task-status-badge {
-  padding: 4px 9px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.35px;
+  border: 1px solid transparent;
+  text-transform: uppercase;
 }
 
 .task-status-created {
   background: var(--created-bg);
   color: var(--created-text);
+  border-color: rgba(127, 181, 255, 0.35);
 }
 
 .task-status-in-progress {
   background: var(--progress-bg);
   color: var(--progress-text);
+  border-color: rgba(255, 193, 98, 0.35);
 }
 
 .task-status-completed {
   background: var(--completed-bg);
   color: var(--completed-text);
+  border-color: rgba(82, 228, 140, 0.35);
 }
 
 .task-status-overdue {
   background: var(--overdue-bg);
   color: var(--overdue-text);
+  border-color: rgba(255, 138, 162, 0.35);
 }
 
 .task-status-unknown {
   background: var(--neutral-bg);
   color: var(--neutral-text);
+  border-color: rgba(181, 192, 214, 0.35);
 }
 
 .empty-state {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.86rem;
 }
 
 .rest-status {
   margin: 0 0 10px;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
 }
 
 .rest-loading {
@@ -261,7 +289,7 @@ body {
   background: var(--bad-bg);
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(251, 113, 133, 0.35);
 }
 
 .btn-retry {
@@ -270,20 +298,20 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--border);
+  border: 1px solid #3d4b67;
   border-radius: 8px;
-  background: var(--surface);
+  background: #273249;
   color: var(--text);
 }
 
 .btn-retry:hover {
-  background: var(--neutral-bg);
+  background: #314160;
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 24, 35, 0.5);
+  background: rgba(6, 8, 14, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,10 +327,10 @@ body {
   width: min(680px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--surface);
+  background: linear-gradient(180deg, #1b2332 0%, #182030 100%);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  border-radius: 14px;
+  box-shadow: 0 26px 48px rgba(0, 0, 0, 0.45);
   padding: 16px;
 }
 
@@ -316,12 +344,13 @@ body {
 
 .modal-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
 }
 
 .modal-close {
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: #212b3e;
+  color: var(--text);
   border-radius: 8px;
   width: 32px;
   height: 32px;
@@ -331,7 +360,7 @@ body {
 }
 
 .modal-close:hover {
-  background: var(--neutral-bg);
+  background: #2c3952;
 }
 
 .modal-section {
@@ -344,6 +373,7 @@ body {
   margin: 4px 0;
   color: var(--muted);
   word-break: break-all;
+  font-size: 0.86rem;
 }
 
 .form-row {
@@ -365,13 +395,13 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
-  background: #fff;
+  background: #131a27;
   color: var(--text);
 }
 
 .btn-primary,
 .btn-secondary {
-  border: 1px solid var(--border);
+  border: 1px solid #3a4964;
   border-radius: 8px;
   padding: 8px 12px;
   font-weight: 600;
@@ -380,8 +410,8 @@ body {
 }
 
 .btn-primary {
-  background: var(--created-bg);
-  color: var(--created-text);
+  background: #2c4f8a;
+  color: #dce9ff;
 }
 
 .btn-primary:disabled,
@@ -391,15 +421,15 @@ body {
 }
 
 .btn-secondary {
-  background: var(--neutral-bg);
-  color: var(--neutral-text);
+  background: #2a3449;
+  color: #c9d4ea;
 }
 
 .modal-error {
   margin-top: 10px;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(251, 113, 133, 0.35);
   background: var(--bad-bg);
   color: var(--bad-text);
   font-size: 0.92rem;
@@ -409,7 +439,7 @@ body {
   margin-top: 10px;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(82, 228, 140, 0.35);
   font-size: 0.92rem;
   background: var(--ok-bg);
   color: var(--ok-text);
@@ -417,7 +447,7 @@ body {
 
 .comments-state {
   margin: 8px 0 0;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   color: var(--muted);
 }
 
@@ -438,7 +468,7 @@ body {
 
 .comment-item {
   border: 1px solid var(--border);
-  background: #fbfcff;
+  background: #1f2737;
   border-radius: 8px;
   padding: 8px 10px;
 }
@@ -453,4 +483,29 @@ body {
   margin: 0;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+@media (max-width: 1120px) {
+  .kanban-board {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .container {
+    margin: 20px auto;
+    padding: 0 12px 18px;
+  }
+
+  .header {
+    padding: 10px 12px;
+  }
+
+  .header h1 {
+    font-size: 1.1rem;
+  }
+
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
 }
