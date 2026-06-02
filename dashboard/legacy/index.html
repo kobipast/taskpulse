@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskPulse Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --text: #1d2433;
+      --muted: #667085;
+      --shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+      --ok-bg: #e9f8ef;
+      --ok-text: #0f8a43;
+      --bad-bg: #fdecee;
+      --bad-text: #c23145;
+      --neutral-bg: #eceff5;
+      --neutral-text: #4d5a73;
+      --border: #e5e8ef;
+      --created-bg: #e8f2ff;
+      --created-text: #1d4ed8;
+      --progress-bg: #fff7e6;
+      --progress-text: #b46700;
+      --completed-bg: #e9f8ef;
+      --completed-text: #0f8a43;
+      --overdue-bg: #fdecee;
+      --overdue-text: #c23145;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 32px auto;
+      padding: 0 16px 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+    }
+
+    .status-connected {
+      background: var(--ok-bg);
+      color: var(--ok-text);
+    }
+
+    .status-disconnected {
+      background: var(--bad-bg);
+      color: var(--bad-text);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .card-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .feed-title {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .feed-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(210px, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+
+    .tasks-section {
+      width: min(calc(100vw - 32px), 1400px);
+      margin-left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .kanban-column {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 10px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kanban-column-header {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .kanban-list {
+      max-height: 50vh;
+    }
+
+    .kanban-empty {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .feed-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fbfcff;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .feed-item:hover {
+      box-shadow: 0 3px 12px rgba(16, 24, 40, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .feed-item:focus-visible {
+      outline: 2px solid var(--created-text);
+      outline-offset: 2px;
+    }
+
+    .feed-item-title {
+      margin: 0 0 6px;
+      font-weight: 700;
+    }
+
+    .feed-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .feed-item-meta {
+      margin: 2px 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .feed-comments {
+      margin: 8px 0 0 18px;
+      padding: 0;
+      color: var(--text);
+      font-size: 0.88rem;
+    }
+
+    .feed-comments li {
+      margin: 2px 0;
+      word-break: break-word;
+    }
+
+    .task-status-badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .task-status-created {
+      background: var(--created-bg);
+      color: var(--created-text);
+    }
+
+    .task-status-in-progress {
+      background: var(--progress-bg);
+      color: var(--progress-text);
+    }
+
+    .task-status-completed {
+      background: var(--completed-bg);
+      color: var(--completed-text);
+    }
+
+    .task-status-overdue {
+      background: var(--overdue-bg);
+      color: var(--overdue-text);
+    }
+
+    .task-status-unknown {
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+    }
+
+    .empty-state {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .rest-status {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+    }
+
+    .rest-loading {
+      color: var(--muted);
+    }
+
+    .rest-error {
+      color: var(--bad-text);
+      background: var(--bad-bg);
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-retry {
+      margin: 0 0 12px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .btn-retry:hover {
+      background: var(--neutral-bg);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 24, 35, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-overlay[hidden] {
+      display: none;
+    }
+
+    .modal {
+      width: min(680px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .modal-close {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      background: var(--neutral-bg);
+    }
+
+    .modal-section {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+
+    .modal-meta {
+      margin: 4px 0;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .form-row select,
+    .form-row textarea,
+    .btn-primary,
+    .btn-secondary {
+      font: inherit;
+    }
+
+    .form-row select,
+    .form-row textarea {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .btn-primary {
+      background: var(--created-bg);
+      color: var(--created-text);
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+    }
+
+    .modal-error {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      font-size: 0.92rem;
+    }
+
+    .modal-success {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.92rem;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+    }
+
+    .comments-state {
+      margin: 8px 0 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .comments-state-error {
+      color: var(--bad-text);
+    }
+
+    .comments-list {
+      list-style: none;
+      margin: 10px 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .comment-item {
+      border: 1px solid var(--border);
+      background: #fbfcff;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .comment-content {
+      margin: 0 0 4px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .comment-meta {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>TaskPulse</h1>
+      <span id="statusBadge" class="status-badge status-disconnected">Disconnected</span>
+    </header>
+
+    <section class="stats-grid">
+      <article class="card">
+        <div class="card-label">Total tasks</div>
+        <div id="totalTasks" class="card-value">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">CREATED</div>
+        <div id="createdCount" class="card-value">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">IN_PROGRESS</div>
+        <div id="inProgressCount" class="card-value">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">COMPLETED</div>
+        <div id="completedCount" class="card-value">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">OVERDUE</div>
+        <div id="overdueCount" class="card-value">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Last update time</div>
+        <div id="lastUpdateTime" class="card-value">-</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Connection state</div>
+        <div id="connectionState" class="card-value">Disconnected</div>
+      </article>
+    </section>
+
+    <section class="card tasks-section">
+      <h2 class="feed-title">Tasks</h2>
+      <p id="restStatus" class="rest-status rest-loading" hidden></p>
+      <button type="button" id="retryLoadBtn" class="btn-retry" hidden>נסה שוב לטעון מ-GET /tasks</button>
+      <p id="emptyState" class="empty-state">אין משימות (אחרי טעינה מוצלחת מהשרת).</p>
+      <div id="kanbanBoard" class="kanban-board" aria-live="polite">
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Created</h3>
+          <p id="createdColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="createdColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">In Progress</h3>
+          <p id="inProgressColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="inProgressColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Completed</h3>
+          <p id="completedColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="completedColumnList" class="feed-list kanban-list"></ul>
+        </section>
+        <section class="kanban-column">
+          <h3 class="kanban-column-header">Overdue</h3>
+          <p id="overdueColumnEmpty" class="kanban-empty">No tasks</p>
+          <ul id="overdueColumnList" class="feed-list kanban-list"></ul>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="taskModalOverlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+      <div class="modal-header">
+        <h3 id="taskModalTitle" class="modal-title">Task Details</h3>
+        <button id="taskModalCloseBtn" type="button" class="modal-close" aria-label="Close task modal">x</button>
+      </div>
+
+      <div>
+        <p id="modalTaskStatusLine" class="modal-meta"></p>
+        <p id="modalTaskIdLine" class="modal-meta"></p>
+        <p id="modalTaskCreatedLine" class="modal-meta"></p>
+        <p id="modalTaskDueLine" class="modal-meta"></p>
+      </div>
+
+      <section class="modal-section">
+        <h4>Change status</h4>
+        <div class="form-row">
+          <label for="modalStatusSelect">Select new status</label>
+          <select id="modalStatusSelect">
+            <option value="CREATED">CREATED</option>
+            <option value="IN_PROGRESS">IN_PROGRESS</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="OVERDUE">OVERDUE</option>
+          </select>
+          <button id="modalSaveStatusBtn" type="button" class="btn-primary">Save</button>
+          <p id="modalSuccess" class="modal-success" hidden></p>
+          <p id="modalError" class="modal-error" hidden></p>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h4>Comments</h4>
+        <div class="form-row">
+          <textarea id="modalCommentText" rows="3" placeholder="Write a comment..."></textarea>
+          <button id="modalAddCommentBtn" type="button" class="btn-secondary">Add Comment</button>
+          <p id="commentsLoadingState" class="comments-state" hidden>Loading comments...</p>
+          <p id="commentsErrorState" class="comments-state comments-state-error" hidden></p>
+          <p id="commentsEmptyState" class="comments-state" hidden>No comments yet.</p>
+          <ul id="modalCommentsList" class="comments-list"></ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script>
+    const BACKEND_ORIGIN = "http://localhost:8080";
+
+    /**
+     * When the dashboard is served from the API (e.g. http://localhost:8080/), use same-origin
+     * URLs so the browser does not block fetch/WebSocket with CORS. Opening this file as file://
+     * falls back to localhost:8080 (then the backend must allow CORS for GET /tasks).
+     */
+    function shouldUseBackendFallbackHost() {
+      const host = window.location.hostname;
+      const port = window.location.port;
+      const isLocalHost = host === "localhost" || host === "127.0.0.1";
+      const isKnownFrontendPort = port === "5500" || port === "3000" || port === "5173" || port === "4173";
+      return isLocalHost && isKnownFrontendPort;
+    }
+
+    function resolveTasksUrl() {
+      const proto = window.location.protocol;
+      if ((proto === "http:" || proto === "https:") && !shouldUseBackendFallbackHost()) {
+        return new URL("/tasks", window.location.origin).href;
+      }
+      return new URL("/tasks", BACKEND_ORIGIN).href;
+    }
+
+    function resolveWsUrl() {
+      const proto = window.location.protocol;
+      if (proto === "http:" && !shouldUseBackendFallbackHost()) {
+        return "ws://" + window.location.host + "/ws";
+      }
+      if (proto === "https:" && !shouldUseBackendFallbackHost()) {
+        return "wss://" + window.location.host + "/ws";
+      }
+      const backendWsOrigin = BACKEND_ORIGIN.replace(/^http/i, "ws");
+      return new URL("/ws", backendWsOrigin).href;
+    }
+
+    const TASKS_URL = resolveTasksUrl();
+    const WS_URL = resolveWsUrl();
+    const TASKS_TOPIC = "/topic/tasks";
+
+    const statusBadgeEl = document.getElementById("statusBadge");
+    const totalTasksEl = document.getElementById("totalTasks");
+    const createdCountEl = document.getElementById("createdCount");
+    const inProgressCountEl = document.getElementById("inProgressCount");
+    const completedCountEl = document.getElementById("completedCount");
+    const overdueCountEl = document.getElementById("overdueCount");
+    const lastUpdateTimeEl = document.getElementById("lastUpdateTime");
+    const connectionStateEl = document.getElementById("connectionState");
+    const kanbanBoardEl = document.getElementById("kanbanBoard");
+    const createdColumnListEl = document.getElementById("createdColumnList");
+    const inProgressColumnListEl = document.getElementById("inProgressColumnList");
+    const completedColumnListEl = document.getElementById("completedColumnList");
+    const overdueColumnListEl = document.getElementById("overdueColumnList");
+    const createdColumnEmptyEl = document.getElementById("createdColumnEmpty");
+    const inProgressColumnEmptyEl = document.getElementById("inProgressColumnEmpty");
+    const completedColumnEmptyEl = document.getElementById("completedColumnEmpty");
+    const overdueColumnEmptyEl = document.getElementById("overdueColumnEmpty");
+    const emptyStateEl = document.getElementById("emptyState");
+    const restStatusEl = document.getElementById("restStatus");
+    const retryLoadBtn = document.getElementById("retryLoadBtn");
+    const taskModalOverlayEl = document.getElementById("taskModalOverlay");
+    const taskModalCloseBtn = document.getElementById("taskModalCloseBtn");
+    const modalTitleEl = document.getElementById("taskModalTitle");
+    const modalTaskStatusLineEl = document.getElementById("modalTaskStatusLine");
+    const modalTaskIdLineEl = document.getElementById("modalTaskIdLine");
+    const modalTaskCreatedLineEl = document.getElementById("modalTaskCreatedLine");
+    const modalTaskDueLineEl = document.getElementById("modalTaskDueLine");
+    const modalStatusSelectEl = document.getElementById("modalStatusSelect");
+    const modalSaveStatusBtn = document.getElementById("modalSaveStatusBtn");
+    const modalCommentTextEl = document.getElementById("modalCommentText");
+    const modalAddCommentBtn = document.getElementById("modalAddCommentBtn");
+    const commentsLoadingStateEl = document.getElementById("commentsLoadingState");
+    const commentsErrorStateEl = document.getElementById("commentsErrorState");
+    const commentsEmptyStateEl = document.getElementById("commentsEmptyState");
+    const modalCommentsListEl = document.getElementById("modalCommentsList");
+    const modalSuccessEl = document.getElementById("modalSuccess");
+    const modalErrorEl = document.getElementById("modalError");
+
+    /** In-memory tasks keyed by normalized id (REST `id` or WebSocket `taskId`). */
+    const tasksById = new Map();
+    /** In-memory comments map keyed by task id -> array of comments. */
+    const commentsByTaskId = new Map();
+
+    /** Timestamp (ms) of the last time the map was updated (REST load or WebSocket upsert). */
+    let lastUpdateMs = null;
+
+    /** Tracks initial REST load: loading | ok | error — drives empty-state vs error banner. */
+    let restLoadState = "loading";
+    let activeModalTaskId = null;
+    let isSavingStatus = false;
+    let isSavingComment = false;
+    let modalCloseTimeoutId = null;
+
+    function buildTaskStatusPatchUrl(taskId) {
+      const base = new URL(TASKS_URL, window.location.href);
+      return new URL("/tasks/" + encodeURIComponent(taskId) + "/status", base.origin).href;
+    }
+
+    function buildTaskCommentsUrl(taskId) {
+      const base = new URL(TASKS_URL, window.location.href);
+      return new URL("/tasks/" + encodeURIComponent(taskId) + "/comments", base.origin).href;
+    }
+
+    function showRestLoading() {
+      restLoadState = "loading";
+      restStatusEl.hidden = false;
+      restStatusEl.className = "rest-status rest-loading";
+      restStatusEl.textContent = "טוען משימות מ־GET " + TASKS_URL + " …";
+      retryLoadBtn.hidden = true;
+    }
+
+    function hideRestStatus() {
+      restLoadState = "ok";
+      restStatusEl.hidden = true;
+      retryLoadBtn.hidden = true;
+    }
+
+    function showRestError(err) {
+      restLoadState = "error";
+      restStatusEl.hidden = false;
+      restStatusEl.className = "rest-status rest-error";
+      const hint =
+        window.location.protocol === "file:"
+          ? " פתיחה מ־file:// גורמת לרוב לחסימת CORS — הגש את הדף מ־http://localhost:8080 (או הוסף CORS ל־GET /tasks)."
+          : "";
+      restStatusEl.textContent =
+        "לא ניתן לטעון את רשימת המשימות. " + (err && err.message ? err.message : String(err)) + "." + hint;
+      retryLoadBtn.hidden = false;
+    }
+
+    function setConnectionState(isConnected) {
+      const text = isConnected ? "Connected" : "Disconnected";
+      statusBadgeEl.textContent = text;
+      connectionStateEl.textContent = text;
+      statusBadgeEl.classList.toggle("status-connected", isConnected);
+      statusBadgeEl.classList.toggle("status-disconnected", !isConnected);
+    }
+
+    /**
+     * Formats an ISO timestamp for display; uses fallback when missing or invalid.
+     */
+    function formatTime(isoTime, fallbackText) {
+      if (!isoTime) {
+        return fallbackText || "-";
+      }
+      const parsed = new Date(isoTime);
+      if (Number.isNaN(parsed.getTime())) {
+        return isoTime;
+      }
+      return parsed.toLocaleString();
+    }
+
+    /**
+     * Maps task status to a CSS class for the visual badge.
+     */
+    function getStatusBadgeClass(status) {
+      const normalized = (status || "").toUpperCase();
+      if (normalized === "CREATED") return "task-status-created";
+      if (normalized === "IN_PROGRESS") return "task-status-in-progress";
+      if (normalized === "COMPLETED") return "task-status-completed";
+      if (normalized === "OVERDUE") return "task-status-overdue";
+      return "task-status-unknown";
+    }
+
+    /**
+     * Normalizes REST or WebSocket payloads so every task uses the same `id` field.
+     */
+    function normalizeTaskPayload(raw) {
+      const id = raw.id != null ? String(raw.id) : raw.taskId != null ? String(raw.taskId) : "";
+      return {
+        id,
+        title: raw.title != null ? String(raw.title) : "",
+        createdAt: raw.createdAt != null ? String(raw.createdAt) : "",
+        dueAt: raw.dueAt != null && String(raw.dueAt).trim() !== "" ? String(raw.dueAt) : null,
+        status: raw.status != null ? String(raw.status) : "CREATED"
+      };
+    }
+
+    function normalizeCommentPayload(raw, fallbackTaskId) {
+      const taskId =
+        raw.taskId != null
+          ? String(raw.taskId)
+          : fallbackTaskId != null
+            ? String(fallbackTaskId)
+            : "";
+      const commentId = raw.commentId != null ? String(raw.commentId) : raw.id != null ? String(raw.id) : "";
+      return {
+        taskId,
+        commentId,
+        content: raw.content != null ? String(raw.content) : "",
+        createdAt: raw.createdAt != null ? String(raw.createdAt) : ""
+      };
+    }
+
+    /**
+     * Recomputes dashboard stats from the current tasks map and updates the DOM.
+     */
+    function updateStatsFromMap() {
+      let created = 0;
+      let inProgress = 0;
+      let completed = 0;
+      let overdue = 0;
+
+      for (const task of tasksById.values()) {
+        const s = (task.status || "").toUpperCase();
+        if (s === "CREATED") created += 1;
+        else if (s === "IN_PROGRESS") inProgress += 1;
+        else if (s === "COMPLETED") completed += 1;
+        else if (s === "OVERDUE") overdue += 1;
+      }
+
+      const total = tasksById.size;
+      totalTasksEl.textContent = String(total);
+      createdCountEl.textContent = String(created);
+      inProgressCountEl.textContent = String(inProgress);
+      completedCountEl.textContent = String(completed);
+      overdueCountEl.textContent = String(overdue);
+
+      if (lastUpdateMs != null) {
+        lastUpdateTimeEl.textContent = new Date(lastUpdateMs).toLocaleString();
+      } else {
+        lastUpdateTimeEl.textContent = "-";
+      }
+    }
+
+    /**
+     * Builds one task card (list item) using DOM APIs to avoid HTML injection.
+     */
+    function createTaskCardElement(task) {
+      const li = document.createElement("li");
+      li.className = "feed-item";
+      li.dataset.taskId = task.id;
+      li.tabIndex = 0;
+
+      const header = document.createElement("div");
+      header.className = "feed-item-header";
+
+      const titleEl = document.createElement("p");
+      titleEl.className = "feed-item-title";
+      titleEl.textContent = task.title || "Untitled task";
+
+      const statusNorm = (task.status || "CREATED").toUpperCase();
+      const badge = document.createElement("span");
+      badge.className = "task-status-badge " + getStatusBadgeClass(statusNorm);
+      badge.textContent = statusNorm;
+
+      header.appendChild(titleEl);
+      header.appendChild(badge);
+      li.appendChild(header);
+
+      const createdLine = document.createElement("p");
+      createdLine.className = "feed-item-meta";
+      createdLine.innerHTML = "<strong>createdAt:</strong> ";
+      createdLine.appendChild(document.createTextNode(formatTime(task.createdAt, "-")));
+
+      const dueLine = document.createElement("p");
+      dueLine.className = "feed-item-meta";
+      dueLine.innerHTML = "<strong>dueAt:</strong> ";
+      dueLine.appendChild(document.createTextNode(formatTime(task.dueAt, "No due date")));
+
+      const idLine = document.createElement("p");
+      idLine.className = "feed-item-meta";
+      idLine.innerHTML = "<strong>id:</strong> ";
+      idLine.appendChild(document.createTextNode(task.id || "-"));
+
+      li.appendChild(createdLine);
+      li.appendChild(dueLine);
+      li.appendChild(idLine);
+
+      const comments = getSortedComments(task.id);
+      if (comments.length > 0) {
+        const commentsTitle = document.createElement("p");
+        commentsTitle.className = "feed-item-meta";
+        commentsTitle.innerHTML = "<strong>Comments:</strong>";
+
+        const commentsList = document.createElement("ul");
+        commentsList.className = "feed-comments";
+        for (const comment of comments) {
+          const commentItem = document.createElement("li");
+          commentItem.textContent = comment.content || "";
+          commentsList.appendChild(commentItem);
+        }
+        li.appendChild(commentsTitle);
+        li.appendChild(commentsList);
+      }
+
+      return li;
+    }
+
+    function setModalError(message) {
+      if (!message) {
+        modalErrorEl.hidden = true;
+        modalErrorEl.textContent = "";
+        return;
+      }
+      modalErrorEl.hidden = false;
+      modalErrorEl.textContent = message;
+    }
+
+    function setModalSuccess(message) {
+      if (!message) {
+        modalSuccessEl.hidden = true;
+        modalSuccessEl.textContent = "";
+        return;
+      }
+      modalSuccessEl.hidden = false;
+      modalSuccessEl.textContent = message;
+    }
+
+    function setModalSavingState(saving) {
+      isSavingStatus = saving;
+      modalStatusSelectEl.disabled = saving;
+      modalSaveStatusBtn.disabled = saving;
+      modalSaveStatusBtn.textContent = saving ? "Saving..." : "Save";
+    }
+
+    function setCommentSavingState(saving) {
+      isSavingComment = saving;
+      modalCommentTextEl.disabled = saving;
+      modalAddCommentBtn.disabled = saving;
+      modalAddCommentBtn.textContent = saving ? "Adding..." : "Add Comment";
+    }
+
+    function setCommentsLoading(isLoading) {
+      commentsLoadingStateEl.hidden = !isLoading;
+    }
+
+    function setCommentsError(message) {
+      if (!message) {
+        commentsErrorStateEl.hidden = true;
+        commentsErrorStateEl.textContent = "";
+        return;
+      }
+      commentsErrorStateEl.hidden = false;
+      commentsErrorStateEl.textContent = message;
+    }
+
+    function getSortedComments(taskId) {
+      const comments = commentsByTaskId.get(taskId) || [];
+      return comments.slice().sort((a, b) => {
+        const ta = new Date(a.createdAt || 0).getTime();
+        const tb = new Date(b.createdAt || 0).getTime();
+        return ta - tb;
+      });
+    }
+
+    function mergeCommentsForTask(taskId, incomingComments) {
+      const existing = commentsByTaskId.get(taskId) || [];
+      const mergedMap = new Map();
+      for (const item of existing) {
+        if (item.commentId) {
+          mergedMap.set(item.commentId, item);
+        }
+      }
+      for (const item of incomingComments) {
+        if (item && item.commentId) {
+          mergedMap.set(item.commentId, item);
+        }
+      }
+      commentsByTaskId.set(taskId, Array.from(mergedMap.values()));
+    }
+
+    function renderCommentsList(taskId) {
+      modalCommentsListEl.replaceChildren();
+      const comments = getSortedComments(taskId);
+      commentsEmptyStateEl.hidden = comments.length > 0;
+
+      for (const comment of comments) {
+        const item = document.createElement("li");
+        item.className = "comment-item";
+
+        const content = document.createElement("p");
+        content.className = "comment-content";
+        content.textContent = comment.content || "";
+
+        const meta = document.createElement("p");
+        meta.className = "comment-meta";
+        meta.textContent = formatTime(comment.createdAt, "-");
+
+        item.appendChild(content);
+        item.appendChild(meta);
+        modalCommentsListEl.appendChild(item);
+      }
+    }
+
+    async function fetchCommentsForTask(taskId) {
+      const response = await fetch(buildTaskCommentsUrl(taskId), { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Failed to load comments: " + response.status);
+      }
+      const list = await response.json();
+      if (!Array.isArray(list)) {
+        throw new Error("Comments response must be an array.");
+      }
+      return list
+        .map((item) => normalizeCommentPayload(item, taskId))
+        .filter((item) => item.taskId && item.commentId);
+    }
+
+    async function loadCommentsSnapshotForTasks(taskIds) {
+      if (!taskIds.length) return;
+      const results = await Promise.allSettled(taskIds.map((taskId) => fetchCommentsForTask(taskId)));
+      for (let i = 0; i < results.length; i += 1) {
+        const result = results[i];
+        const taskId = taskIds[i];
+        if (result.status === "fulfilled") {
+          mergeCommentsForTask(taskId, result.value);
+        } else {
+          console.error("Failed loading comments for task:", taskId, result.reason);
+        }
+      }
+      renderTaskList();
+      if (activeModalTaskId) {
+        renderCommentsList(activeModalTaskId);
+      }
+    }
+
+    async function loadCommentsForTask(taskId) {
+      setCommentsError("");
+      setCommentsLoading(true);
+      try {
+        const normalized = await fetchCommentsForTask(taskId);
+        mergeCommentsForTask(taskId, normalized);
+        renderTaskList();
+        if (activeModalTaskId === taskId) {
+          renderCommentsList(taskId);
+        }
+      } catch (error) {
+        setCommentsError(error && error.message ? error.message : "Failed to load comments.");
+      } finally {
+        setCommentsLoading(false);
+      }
+    }
+
+    async function addCommentFromModal() {
+      if (!activeModalTaskId || isSavingComment) return;
+      const content = modalCommentTextEl.value.trim();
+      if (!content) {
+        setCommentsError("Comment cannot be empty.");
+        return;
+      }
+      setCommentsError("");
+      setCommentSavingState(true);
+      try {
+        const response = await fetch(buildTaskCommentsUrl(activeModalTaskId), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ content })
+        });
+        if (!response.ok) {
+          throw new Error("Failed to add comment: " + response.status);
+        }
+        modalCommentTextEl.value = "";
+      } catch (error) {
+        setCommentsError(error && error.message ? error.message : "Failed to add comment.");
+      } finally {
+        setCommentSavingState(false);
+      }
+    }
+
+    function openTaskModal(taskId) {
+      const task = tasksById.get(taskId);
+      if (!task) return;
+
+      activeModalTaskId = taskId;
+      modalTitleEl.textContent = task.title || "Untitled task";
+      modalTaskStatusLineEl.innerHTML = "<strong>Current status:</strong> " + (task.status || "CREATED");
+      modalTaskIdLineEl.innerHTML = "<strong>id:</strong> " + (task.id || "-");
+      modalTaskCreatedLineEl.innerHTML = "<strong>createdAt:</strong> " + formatTime(task.createdAt, "-");
+      modalTaskDueLineEl.innerHTML = "<strong>dueAt:</strong> " + formatTime(task.dueAt, "No due date");
+      modalStatusSelectEl.value = (task.status || "CREATED").toUpperCase();
+      setModalSuccess("");
+      setModalError("");
+      setModalSavingState(false);
+      setCommentsError("");
+      setCommentsLoading(false);
+      setCommentSavingState(false);
+      modalCommentTextEl.value = "";
+      renderCommentsList(taskId);
+      taskModalOverlayEl.hidden = false;
+      loadCommentsForTask(taskId);
+    }
+
+    function closeTaskModal() {
+      if (isSavingStatus) return;
+      if (modalCloseTimeoutId) {
+        clearTimeout(modalCloseTimeoutId);
+        modalCloseTimeoutId = null;
+      }
+      taskModalOverlayEl.hidden = true;
+      activeModalTaskId = null;
+      setModalSuccess("");
+      setModalError("");
+      setCommentsError("");
+      setCommentsLoading(false);
+    }
+
+    async function saveTaskStatusFromModal() {
+      if (!activeModalTaskId || isSavingStatus) return;
+      const selectedStatus = modalStatusSelectEl.value;
+      setModalError("");
+      setModalSavingState(true);
+
+      try {
+        const url = buildTaskStatusPatchUrl(activeModalTaskId);
+        const response = await fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+
+        if (!response.ok) {
+          throw new Error("Status update failed with " + response.status);
+        }
+
+        // WS-only architecture: do not mutate local task map here.
+        // We wait for backend WebSocket event to update dashboard state.
+        setModalSuccess("הסטטוס עודכן בהצלחה");
+        if (modalCloseTimeoutId) {
+          clearTimeout(modalCloseTimeoutId);
+          modalCloseTimeoutId = null;
+        }
+      } catch (err) {
+        setModalError(err && err.message ? err.message : "Failed to update status.");
+      } finally {
+        setModalSavingState(false);
+      }
+    }
+
+    /**
+     * Clears and re-renders the full task list from `tasksById` (no duplicates).
+     */
+    function renderTaskList() {
+      createdColumnListEl.replaceChildren();
+      inProgressColumnListEl.replaceChildren();
+      completedColumnListEl.replaceChildren();
+      overdueColumnListEl.replaceChildren();
+
+      const tasks = Array.from(tasksById.values());
+      const grouped = {
+        CREATED: [],
+        IN_PROGRESS: [],
+        COMPLETED: [],
+        OVERDUE: []
+      };
+
+      for (const task of tasks) {
+        const status = (task.status || "CREATED").toUpperCase();
+        if (grouped[status]) {
+          grouped[status].push(task);
+        } else {
+          grouped.CREATED.push(task);
+        }
+      }
+
+      for (const statusKey of Object.keys(grouped)) {
+        grouped[statusKey].sort((a, b) => {
+          const ta = new Date(a.createdAt || 0).getTime();
+          const tb = new Date(b.createdAt || 0).getTime();
+          return tb - ta;
+        });
+      }
+
+      for (const task of grouped.CREATED) {
+        createdColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.IN_PROGRESS) {
+        inProgressColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.COMPLETED) {
+        completedColumnListEl.appendChild(createTaskCardElement(task));
+      }
+      for (const task of grouped.OVERDUE) {
+        overdueColumnListEl.appendChild(createTaskCardElement(task));
+      }
+
+      createdColumnEmptyEl.hidden = grouped.CREATED.length > 0;
+      inProgressColumnEmptyEl.hidden = grouped.IN_PROGRESS.length > 0;
+      completedColumnEmptyEl.hidden = grouped.COMPLETED.length > 0;
+      overdueColumnEmptyEl.hidden = grouped.OVERDUE.length > 0;
+
+      const showEmpty = tasks.length === 0 && restLoadState === "ok";
+      emptyStateEl.style.display = showEmpty ? "block" : "none";
+    }
+
+    /**
+     * Marks the dashboard as updated, refreshes stats, and re-renders the list.
+     */
+    function refreshDashboard() {
+      updateStatsFromMap();
+      renderTaskList();
+    }
+
+    /**
+     * Inserts or updates a task and refreshes UI. Skips invalid payloads (no id).
+     */
+    function upsertTask(rawPayload) {
+      const normalized = normalizeTaskPayload(rawPayload);
+      if (!normalized.id) {
+        console.warn("Task payload missing id/taskId:", rawPayload);
+        return;
+      }
+      tasksById.set(normalized.id, normalized);
+      lastUpdateMs = Date.now();
+      refreshDashboard();
+    }
+
+    function handleTaskCommentAdded(rawPayload) {
+      const normalized = normalizeCommentPayload(rawPayload);
+      if (!normalized.taskId || !normalized.commentId) {
+        console.warn("Invalid comment payload:", rawPayload);
+        return;
+      }
+      mergeCommentsForTask(normalized.taskId, [normalized]);
+      renderTaskList();
+      if (activeModalTaskId === normalized.taskId) {
+        renderCommentsList(normalized.taskId);
+      }
+    }
+
+    function handleSocketEnvelope(rawMessage) {
+      const envelope = JSON.parse(rawMessage);
+      const type = envelope && envelope.type;
+      const payload = envelope && envelope.payload;
+      if (!type || !payload) {
+        throw new Error("Invalid event envelope.");
+      }
+
+      if (type === "TASK_CREATED" || type === "TASK_STATUS_CHANGED") {
+        upsertTask(payload);
+        return;
+      }
+
+      if (type === "TASK_COMMENT_ADDED") {
+        handleTaskCommentAdded(payload);
+        return;
+      }
+
+      console.warn("Unhandled event type:", type);
+    }
+
+    /**
+     * Loads task state from REST. Use replaceAll: true on retry to reset the map from the server.
+     */
+    async function loadTasksFromRest(options) {
+      const replaceAll = options && options.replaceAll === true;
+      if (replaceAll) {
+        tasksById.clear();
+        commentsByTaskId.clear();
+        lastUpdateMs = null;
+        refreshDashboard();
+      }
+
+      showRestLoading();
+      try {
+        const response = await fetch(TASKS_URL, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("השרת החזיר " + response.status + " עבור GET /tasks");
+        }
+        const list = await response.json();
+        if (!Array.isArray(list)) {
+          throw new Error("צפוי מערך JSON מהשרת");
+        }
+        for (const item of list) {
+          const normalized = normalizeTaskPayload(item);
+          if (normalized.id) {
+            tasksById.set(normalized.id, normalized);
+          }
+        }
+        await loadCommentsSnapshotForTasks(Array.from(tasksById.keys()));
+        lastUpdateMs = Date.now();
+        hideRestStatus();
+        refreshDashboard();
+      } catch (err) {
+        console.error("loadTasksFromRest:", err);
+        showRestError(err);
+        refreshDashboard();
+      }
+    }
+
+    /**
+     * Starts STOMP after initial REST data is loaded (or fetch failed).
+     */
+    function startWebSocketClient() {
+      const client = new StompJs.Client({
+        brokerURL: WS_URL,
+        reconnectDelay: 5000,
+        onConnect: () => {
+          setConnectionState(true);
+          client.subscribe(TASKS_TOPIC, (message) => {
+            try {
+              handleSocketEnvelope(message.body);
+            } catch (error) {
+              console.error("Invalid task event payload:", error);
+            }
+          });
+        },
+        onWebSocketClose: () => {
+          setConnectionState(false);
+        },
+        onStompError: (frame) => {
+          setConnectionState(false);
+          console.error("STOMP error:", frame.headers["message"], frame.body);
+        }
+      });
+      client.activate();
+    }
+
+    setConnectionState(false);
+
+    retryLoadBtn.addEventListener("click", function () {
+      loadTasksFromRest({ replaceAll: true });
+    });
+
+    kanbanBoardEl.addEventListener("click", function (event) {
+      const taskCard = event.target.closest(".feed-item");
+      if (!taskCard) return;
+      const taskId = taskCard.dataset.taskId;
+      if (taskId) {
+        openTaskModal(taskId);
+      }
+    });
+
+    kanbanBoardEl.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const taskCard = event.target.closest(".feed-item");
+      if (!taskCard) return;
+      event.preventDefault();
+      const taskId = taskCard.dataset.taskId;
+      if (taskId) {
+        openTaskModal(taskId);
+      }
+    });
+
+    modalSaveStatusBtn.addEventListener("click", saveTaskStatusFromModal);
+    modalAddCommentBtn.addEventListener("click", addCommentFromModal);
+    taskModalCloseBtn.addEventListener("click", closeTaskModal);
+    taskModalOverlayEl.addEventListener("click", function (event) {
+      if (event.target === taskModalOverlayEl) {
+        closeTaskModal();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !taskModalOverlayEl.hidden) {
+        closeTaskModal();
+      }
+    });
+
+    (async function init() {
+      await loadTasksFromRest({ replaceAll: false });
+      startWebSocketClient();
+    })();
+  </script>
+</body>
+</html>

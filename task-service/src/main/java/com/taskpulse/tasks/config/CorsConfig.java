@@ -15,7 +15,8 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/tasks/**")
-                        .allowedOrigins("http://localhost:5500")
+                        .allowedOrigins("http://localhost:5500",
+                                        "http://localhost:5173")
                         .allowedMethods("*")
                         .allowedHeaders("*");
             }
